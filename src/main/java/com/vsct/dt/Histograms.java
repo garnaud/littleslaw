@@ -1,8 +1,12 @@
 package com.vsct.dt;
 
 import java.util.Arrays;
+import java.util.Random;
 
 class Histograms {
+
+    private Random rand = new Random(System.currentTimeMillis());
+
     /**
      * sample latencies by bucket.
      */
@@ -47,16 +51,28 @@ class Histograms {
 
 
     void latency(int i) {
-        latencies[currentBucket][currentSample] = i;
-        nextSample();
-    }
-
-    private void nextSample() {
-        currentSample = (currentSample + 1) % sample;
+        counters[currentBucket]++;
+        if (counters[currentBucket] > sample) {
+            // sample array is filled, so let choose one to replace b
+            int indexToRemove = rand.nextInt(counters[currentBucket]);
+            if (indexToRemove < sample) {
+                latencies[currentBucket][indexToRemove] = i;
+            }
+        } else {
+            latencies[currentBucket][currentSample] = i;
+            currentSample++;
+        }
     }
 
     void nextBucket() {
         currentBucket = (currentBucket + 1) % bucket;
+        currentSample = 0;
     }
 
+
+    int percentiles(int i) {
+        int previousBucket = (currentBucket + bucket - 1) % bucket;
+        Arrays.sort(latencies[previousBucket]);
+        return latencies[previousBucket][Math.max(i * sample / 100 - 1, 0)];
+    }
 }
