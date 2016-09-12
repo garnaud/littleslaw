@@ -8,4 +8,5 @@ public class LittlesLaw {
         return initialCapacity;
     }
 
+
 }

@@ -13,19 +13,19 @@ public class HistogramsTest {
         int[] zeros10 = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
         // test
-        Histograms histograms = new Histograms(10, 10);
+        Histograms histograms = new Histograms(10, 10, 10_000);
 
         // check
         for (int i = 0; i < 10; i++) {
             Assert.assertArrayEquals(zeros10, histograms.latencies[i]);
         }
-        Assert.assertArrayEquals(zeros10, histograms.counters);
+        Assert.assertArrayEquals(zeros10, histograms.responses);
     }
 
     @Test
     public void should_fill_all_latencies_sample_and_counters() {
         // given
-        Histograms histograms = new Histograms(10, 100);
+        Histograms histograms = new Histograms(10, 100, 10_000);
 
         // test
         for (int bucket = 0; bucket < 10; bucket++) {
@@ -40,14 +40,14 @@ public class HistogramsTest {
             for (int sample = 0; sample < 100; sample++) {
                 assertEquals(sample + 1, histograms.latencies[bucket][sample]);
             }
-            assertEquals(100, histograms.counters[bucket]);
+            assertEquals(100, histograms.responses[bucket]);
         }
     }
 
     @Test
     public void should_fill_latencies_into_sample_with_fair_probability() {
         // given
-        Histograms histograms = new Histograms(100, 100);  // 100 samples maximum
+        Histograms histograms = new Histograms(100, 100, 10_000);  // 100 samples maximum
 
         // test
         for (int bucket = 0; bucket < 100; bucket++) {
@@ -72,7 +72,7 @@ public class HistogramsTest {
     public void should_give_last_percentiles_for_latency() {
         // given
         int bucket = 2, sample = 100;
-        Histograms histograms = new Histograms(bucket, sample);
+        Histograms histograms = new Histograms(bucket, sample, 10_000);
 
         // test
         for (int currentBucket = 0; currentBucket < bucket; currentBucket++) {
@@ -88,4 +88,21 @@ public class HistogramsTest {
         assertEquals(90, histograms.percentiles(90));
         assertEquals(100, histograms.percentiles(100));
     }
+
+    @Test
+    public void should_give_rate_request() {
+        // given
+        int bucket = 2, sample = 100;
+        Histograms histograms = new Histograms(bucket, sample, 1_000);
+
+        // test
+        for (int request = 0; request < 100; request++) {
+            histograms.request();
+        }
+        histograms.nextBucket();
+
+        // check
+        assertEquals(0.1d, histograms.rate(), 0d);
+    }
+
 }
